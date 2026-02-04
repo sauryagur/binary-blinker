@@ -1,4 +1,3 @@
-// components/Blinker.tsx
 import { createSignal, createEffect, onCleanup, Show } from "solid-js";
 import { encodeData, EncodingType } from "../utils/encoder";
 
@@ -19,27 +18,32 @@ export const Blinker = (props: BlinkerProps) => {
 
     const data = encodeData(props.message, props.encoding);
     let bitIndex = 0;
-    let rafId: number;
     let lastTick = 0;
+    let rafId = 0;
+    let cancelled = false;
 
-    // Calculate interval in ms based on Hz
-    const interval = 1000 / props.hz;
+    // Clamp Hz to realistic RAF limits
+    const effectiveHz = Math.min(props.hz, 60);
+    const interval = 1000 / effectiveHz;
 
     const loop = (time: number) => {
+      if (cancelled) return;
+
       if (time - lastTick >= interval) {
         lastTick = time;
-        if (bitIndex < data.length) {
-          setColor(data[bitIndex] === 1 ? "white" : "black");
-          bitIndex++;
-        } else {
-          bitIndex = 0; // Loop transmission
-        }
+        setColor(data[bitIndex] === 1 ? "white" : "black");
+        bitIndex = (bitIndex + 1) % data.length;
       }
+
       rafId = requestAnimationFrame(loop);
     };
 
     rafId = requestAnimationFrame(loop);
-    onCleanup(() => cancelAnimationFrame(rafId));
+
+    onCleanup(() => {
+      cancelled = true;
+      cancelAnimationFrame(rafId);
+    });
   });
 
   const handleFullscreen = () => {
@@ -58,8 +62,11 @@ export const Blinker = (props: BlinkerProps) => {
         class="fixed inset-0 z-50 flex items-center justify-center cursor-none"
         style={{ "background-color": color(), transition: "none" }}
       >
-        <button 
-          onClick={(e) => { e.stopPropagation(); props.onClose(); }}
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            props.onClose();
+          }}
           class="opacity-0 hover:opacity-100 transition-opacity bg-white text-black px-6 py-3 font-mono text-xs border border-black uppercase tracking-widest"
         >
           Stop / Exit
