@@ -32,8 +32,20 @@ export const Blinker = (props: BlinkerProps) => {
 
       if (time - lastTick >= interval) {
         lastTick = time;
+
+        // Finished transmitting payload
+        if (bitIndex >= data.length) {
+          cancelled = true;
+          cancelAnimationFrame(rafId);
+          setTimeout(() => {
+            props.onClose();
+          }, 200);
+
+          return;
+        }
+
         setColor(data[bitIndex] === 1 ? "white" : "black");
-        bitIndex = (bitIndex + 1) % data.length;
+        bitIndex++;
       }
 
       rafId = requestAnimationFrame(loop);
