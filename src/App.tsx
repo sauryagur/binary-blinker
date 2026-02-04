@@ -1,9 +1,12 @@
-// App.tsx
-import { createSignal } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { Blinker } from "./components/Blinker";
-import { EncodingType } from "./utils/encoder";
+import { Scanner } from "./components/Scanner";
+import { EncodingType } from "./utils/config";
+
+type AppMode = "Transmit" | "Scan";
 
 const App = () => {
+  const [mode, setMode] = createSignal<AppMode>("Transmit");
   const [message, setMessage] = createSignal("TEST123");
   const [hz, setHz] = createSignal(15);
   const [encoding, setEncoding] = createSignal<EncodingType>("Manchester");
@@ -22,15 +25,32 @@ const App = () => {
         <div class="space-y-4">
           <div>
             <label class="block text-[10px] uppercase text-zinc-400 mb-1">
-              Data String
+              Operation
             </label>
-            <input
-              type="text"
-              value={message()}
-              onInput={(e) => setMessage(e.currentTarget.value)}
-              class="w-full bg-zinc-900 border border-zinc-800 rounded-none px-3 py-2 text-sm focus:border-white outline-none transition-colors"
-            />
+            <select
+              value={mode()}
+              onChange={(e) => setMode(e.currentTarget.value as AppMode)}
+              class="w-full bg-zinc-900 border border-zinc-800 rounded-none px-2 py-2 text-sm outline-none"
+            >
+              <option value="Transmit">Transmit</option>
+              <option value="Scan">Scan</option>
+            </select>
           </div>
+
+          {/* Transmit-only input */}
+          <Show when={mode() === "Transmit"}>
+            <div>
+              <label class="block text-[10px] uppercase text-zinc-400 mb-1">
+                Data String
+              </label>
+              <input
+                type="text"
+                value={message()}
+                onInput={(e) => setMessage(e.currentTarget.value)}
+                class="w-full bg-zinc-900 border border-zinc-800 rounded-none px-3 py-2 text-sm focus:border-white outline-none transition-colors"
+              />
+            </div>
+          </Show>
 
           <div class="grid grid-cols-2 gap-4">
             <div>
@@ -69,7 +89,7 @@ const App = () => {
               onClick={() => setIsActive(true)}
               class="w-full bg-white text-black py-3 text-xs font-bold uppercase tracking-widest hover:bg-zinc-200 transition-colors"
             >
-              Start Stream
+              {mode() === "Transmit" ? "Start Stream" : "Start Scan"}
             </button>
           </div>
         </div>
@@ -79,13 +99,25 @@ const App = () => {
         </footer>
       </main>
 
-      <Blinker
-        active={isActive()}
-        message={message()}
-        hz={hz()}
-        encoding={encoding()}
-        onClose={() => setIsActive(false)}
-      />
+      {/* Fullscreen modes */}
+      <Show when={mode() === "Transmit"}>
+        <Blinker
+          active={isActive()}
+          message={message()}
+          hz={hz()}
+          encoding={encoding()}
+          onClose={() => setIsActive(false)}
+        />
+      </Show>
+
+      <Show when={mode() === "Scan"}>
+        <Scanner
+          active={isActive()}
+          hz={hz()}
+          encoding={encoding()}
+          onClose={() => setIsActive(false)}
+        />
+      </Show>
     </div>
   );
 };

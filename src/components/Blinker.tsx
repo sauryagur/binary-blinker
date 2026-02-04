@@ -1,5 +1,6 @@
 import { createSignal, createEffect, onCleanup, Show } from "solid-js";
-import { encodeData, EncodingType } from "../utils/encoder";
+import { EncodingType } from "../utils/config";
+import { encodeData } from "../utils/encoder";
 
 interface BlinkerProps {
   message: string;

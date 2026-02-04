@@ -1,6 +1,6 @@
 // utils/encoder.ts
 
-export type EncodingType = "Manchester" | "Raw Binary";
+import type { EncodingType } from "./config";
 
 const stringToBits = (text: string): number[] => {
   const data = new TextEncoder().encode(text);
